@@ -12,7 +12,9 @@ import {
   Square,
   ChevronRight,
   BarChart3,
-  X
+  X,
+  Download,
+  RefreshCw
 } from 'lucide-react';
 
 // Mock Data
@@ -38,7 +40,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  const fetchSmartMoneyData = () => {
     setIsLoading(true);
     fetch('/api/smart-money')
       .then(res => res.json())
@@ -51,6 +53,10 @@ export default function App() {
         console.error('Failed to fetch smart money:', err);
         setIsLoading(false);
       });
+  };
+
+  React.useEffect(() => {
+    fetchSmartMoneyData();
   }, []);
 
   const connectWallet = async () => {
@@ -223,7 +229,17 @@ export default function App() {
 
             {/* Table Header Actions */}
             <div className="flex justify-between items-end">
-              <h2 className="text-xl font-semibold">监控列表 (Watchlist)</h2>
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl font-semibold">监控列表 (Watchlist)</h2>
+                <button 
+                  onClick={fetchSmartMoneyData}
+                  disabled={isLoading}
+                  className="p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors disabled:opacity-50"
+                  title="刷新数据"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
               <button 
                 onClick={() => setIsAddModalOpen(true)}
                 className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 rounded-xl font-medium transition-colors flex items-center gap-2 border border-zinc-700"
@@ -418,6 +434,26 @@ export default function App() {
 
         {activeTab === 'settings' && (
           <div className="max-w-2xl space-y-8">
+            
+            {/* 导出项目模块 */}
+            <div className="p-6 rounded-2xl bg-zinc-900/50 border border-emerald-500/30 space-y-4">
+              <h3 className="text-lg font-semibold text-emerald-400 flex items-center gap-2">
+                <Download className="w-5 h-5" />
+                导出项目源码 (Mac 专用)
+              </h3>
+              <p className="text-zinc-400 text-sm">
+                点击下方按钮，将整个项目源码打包下载到您的 Mac 电脑上。下载后请参考之前的指南进行本地运行。
+              </p>
+              <a 
+                href="/api/export" 
+                download="polymarket-bot.zip"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                下载项目源码 (.zip)
+              </a>
+            </div>
+
             <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 space-y-6">
               <div>
                 <h3 className="text-lg font-semibold mb-1">Polymarket API 凭证</h3>

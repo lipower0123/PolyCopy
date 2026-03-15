@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import * as dotenv from "dotenv";
 import { ethers } from "ethers";
+import archiver from "archiver";
 
 // Load environment variables from .env file (if it exists)
 dotenv.config();
@@ -90,6 +91,32 @@ async function startServer() {
     }
   });
 
+  app.get("/api/export", (req, res) => {
+    res.attachment("polymarket-bot.zip");
+    const archive = archiver("zip", { zlib: { level: 9 } });
+    
+    archive.on("error", (err) => {
+      console.error("Export error:", err);
+      res.status(500).send({ error: err.message });
+    });
+    
+    archive.pipe(res);
+    
+    // Add all files in the current directory, excluding node_modules, dist, and .git
+    archive.directory(process.cwd(), false, (entry) => {
+      if (
+        entry.name.startsWith("node_modules") || 
+        entry.name.startsWith("dist") || 
+        entry.name.startsWith(".git")
+      ) {
+        return false;
+      }
+      return entry;
+    });
+    
+    archive.finalize();
+  });
+
   app.get("/api/smart-money", async (req, res) => {
     try {
       // Fetch real active events from Polymarket Gamma API
@@ -103,25 +130,37 @@ async function startServer() {
       // Mix real market data with our smart money profiles to show what they are "betting" on
       const smartMoney = [
         { 
-          id: '0x71a...9b2e', name: 'Whale_01', roi: '+145.2%', winRate: '68%', active: 12, 
+          id: '0x71a...9b2e', name: 'Whale_01', 
+          roi: `+${(140 + Math.random() * 10).toFixed(1)}%`, 
+          winRate: `${Math.floor(65 + Math.random() * 5)}%`, 
+          active: Math.floor(10 + Math.random() * 5), 
           category: events[0]?.category || 'Politics', 
           currentBet: events[0]?.title || 'Presidential Election',
           isCustom: false 
         },
         { 
-          id: '0x22f...4c1a', name: 'CryptoOracle', roi: '+89.4%', winRate: '72%', active: 5, 
+          id: '0x22f...4c1a', name: 'CryptoOracle', 
+          roi: `+${(85 + Math.random() * 10).toFixed(1)}%`, 
+          winRate: `${Math.floor(70 + Math.random() * 5)}%`, 
+          active: Math.floor(3 + Math.random() * 4), 
           category: events[1]?.category || 'Crypto', 
           currentBet: events[1]?.title || 'Bitcoin Price',
           isCustom: false 
         },
         { 
-          id: '0x99d...11aa', name: 'SportsBettor', roi: '+42.1%', winRate: '55%', active: 8, 
+          id: '0x99d...11aa', name: 'SportsBettor', 
+          roi: `+${(40 + Math.random() * 5).toFixed(1)}%`, 
+          winRate: `${Math.floor(50 + Math.random() * 10)}%`, 
+          active: Math.floor(5 + Math.random() * 5), 
           category: events[2]?.category || 'Sports', 
           currentBet: events[2]?.title || 'Super Bowl',
           isCustom: false 
         },
         { 
-          id: '0x44b...88cc', name: 'MacroFund', roi: '+210.5%', winRate: '81%', active: 3, 
+          id: '0x44b...88cc', name: 'MacroFund', 
+          roi: `+${(200 + Math.random() * 20).toFixed(1)}%`, 
+          winRate: `${Math.floor(78 + Math.random() * 5)}%`, 
+          active: Math.floor(2 + Math.random() * 3), 
           category: events[3]?.category || 'Pop Culture', 
           currentBet: events[3]?.title || 'Fed Rates',
           isCustom: false 
@@ -131,8 +170,8 @@ async function startServer() {
       res.json({
         smartMoney,
         stats: {
-          monitoredWallets: 1248,
-          volume24h: "$4.2M",
+          monitoredWallets: Math.floor(1240 + Math.random() * 20),
+          volume24h: `$${(4.1 + Math.random() * 0.3).toFixed(1)}M`,
           topCategory: topCategory
         }
       });
